@@ -1,0 +1,299 @@
+<!-- Same template copy for workspace -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>{{TITLE}} - HFStream Embed Oynatıcı</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #playerContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    #embedVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 18px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    #playerContainer.controls-active .top-bar { opacity: 1; pointer-events: auto; }
+    .top-left { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { font-weight: 900; font-size: 15px; letter-spacing: -0.3px; color: #fff; text-decoration: none; }
+    .brand-logo span { color: #00e5b4; }
+    .badge-quality { background: rgba(0, 229, 180, 0.18); color: #00e5b4; border: 1px solid rgba(0, 229, 180, 0.4); padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+    .video-title { font-size: 13.5px; font-weight: 700; color: #eee; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-share { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 18px 14px;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    #playerContainer.controls-active .bottom-bar { opacity: 1; pointer-events: auto; }
+    .progress-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.25); border-radius: 3px; cursor: pointer; position: relative; margin-bottom: 12px; }
+    .progress-filled { height: 100%; width: 0%; background: #00e5b4; border-radius: 3px; }
+    .controls-row { display: flex; align-items: center; justify-content: space-between; }
+    .controls-left, .controls-right { display: flex; align-items: center; gap: 12px; }
+    .ctrl-btn { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; }
+    .time-disp { font-size: 11.5px; font-weight: 600; color: #ccc; }
+    .center-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 15; pointer-events: none; }
+    .big-play-btn { width: 68px; height: 68px; border-radius: 50%; background: rgba(0, 229, 180, 0.9); color: #000; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; pointer-events: auto; box-shadow: 0 0 25px rgba(0,229,180,0.5); }
+    .spinner { width: 46px; height: 46px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #00e5b4; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .watermark { position: absolute; top: 14px; right: 18px; z-index: 18; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; text-decoration: none; color: #ccc; font-size: 11px; font-weight: 700; }
+    .watermark span.dot { width: 6px; height: 6px; border-radius: 50%; background: #00e5b4; }
+    #playerContainer.controls-active .watermark { opacity: 0; pointer-events: none; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box { width: 100%; max-width: 440px; background: #121220; border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 20px; }
+    .code-box { width: 100%; height: 70px; background: #090913; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 11px; color: #00e5b4; resize: none; margin-bottom: 14px; }
+    .btn-copy { width: 100%; background: #00e5b4; color: #000; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; }
+    .disabled-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px; background: #07070e; }
+  </style>
+</head>
+<body>
+  {{DISABLED_BLOCK}}
+  <div id="playerContainer" class="controls-active" style="{{PLAYER_STYLE}}">
+    <a href="{{WATERMARK_URL}}" target="_blank" class="watermark" id="watermark">
+      <span class="dot"></span>
+      <span>{{WATERMARK_TEXT}}</span>
+    </a>
+    <div class="top-bar">
+      <div class="top-left">
+        <a href="/eshanio" class="brand-logo" target="_blank">HF<span>Stream</span></a>
+        <span class="badge-quality">1080p BluRay</span>
+        <div class="video-title">{{TITLE}}</div>
+      </div>
+      <button class="btn-share" onclick="openShareModal()">🔗 Embed Kodu</button>
+    </div>
+    <video id="embedVideo" src="{{STREAM_URL}}" poster="{{POSTER_URL}}" playsinline="true" webkit-playsinline="true" x5-playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto" crossorigin="anonymous"></video>
+    <div class="center-overlay" id="centerOverlay">
+      <div class="big-play-btn" id="bigPlayBtn" onclick="togglePlay()">▶</div>
+      <div class="spinner" id="spinner"></div>
+    </div>
+    <div class="bottom-bar">
+      <div class="progress-wrap" id="progressWrap" onclick="seekVideo(event)">
+        <div class="progress-filled" id="progressFilled"></div>
+      </div>
+      <div class="controls-row">
+        <div class="controls-left">
+          <button class="ctrl-btn" id="playBtn" onclick="togglePlay()">▶</button>
+          <button class="ctrl-btn" onclick="skip(-10)" title="10s Geri">« 10</button>
+          <button class="ctrl-btn" onclick="skip(10)" title="10s İleri">10 »</button>
+          <button class="ctrl-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+          <span class="time-disp" id="timeDisplay">00:00 / 00:00</span>
+        </div>
+        <div class="controls-right">
+          <button class="ctrl-btn" id="speedBtn" onclick="toggleSpeed()" title="Oynatma Hızı">1x</button>
+          <button class="ctrl-btn" id="pipBtn" onclick="togglePip()" title="Resim İçinde Resim">🖼</button>
+          <button class="ctrl-btn" id="fsBtn" onclick="toggleFullscreen()" title="Tam Ekran">⛶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="shareModal" onclick="if(event.target===this)closeShareModal()">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <h3 style="font-size:15px;color:#fff">Embed Kodu</h3>
+        <button onclick="closeShareModal()" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <textarea class="code-box" id="embedCodeText" readonly>{{EMBED_IFRAME_CODE}}</textarea>
+      <button class="btn-copy" id="btnCopyCode" onclick="copyEmbedCode()">📋 Kodu Kopyala</button>
+    </div>
+  </div>
+  <script>
+    var video = document.getElementById('embedVideo');
+    var container = document.getElementById('playerContainer');
+    var playBtn = document.getElementById('playBtn');
+    var bigPlayBtn = document.getElementById('bigPlayBtn');
+    var spinner = document.getElementById('spinner');
+    var progressFilled = document.getElementById('progressFilled');
+    var timeDisplay = document.getElementById('timeDisplay');
+    var muteBtn = document.getElementById('muteBtn');
+    var speedBtn = document.getElementById('speedBtn');
+    var controlsTimeout = null;
+
+    function resetControlsTimer() {
+      if (!container) return;
+      container.classList.add('controls-active');
+      clearTimeout(controlsTimeout);
+      if (!video.paused) {
+        controlsTimeout = setTimeout(function() {
+          container.classList.remove('controls-active');
+        }, 3200);
+      }
+    }
+
+    container.addEventListener('mousemove', resetControlsTimer);
+    container.addEventListener('touchstart', resetControlsTimer);
+    container.addEventListener('click', function(e) {
+      if (e.target === video || e.target === container) {
+        togglePlay();
+      }
+    });
+
+    function togglePlay() {
+      if (!video) return;
+      if (video.paused) {
+        video.play().then(function() {
+          playBtn.textContent = '⏸';
+          bigPlayBtn.style.display = 'none';
+          resetControlsTimer();
+        }).catch(function(err){ console.log(err); });
+      } else {
+        video.pause();
+        playBtn.textContent = '▶';
+        bigPlayBtn.textContent = '▶';
+        bigPlayBtn.style.display = 'flex';
+        container.classList.add('controls-active');
+      }
+    }
+
+    function skip(sec) {
+      if (!video) return;
+      video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + sec));
+      resetControlsTimer();
+    }
+
+    function toggleMute() {
+      if (!video) return;
+      video.muted = !video.muted;
+      muteBtn.textContent = video.muted ? '🔇' : '🔊';
+      resetControlsTimer();
+    }
+
+    var speeds = [1, 1.25, 1.5, 2, 0.75];
+    var speedIdx = 0;
+    function toggleSpeed() {
+      if (!video) return;
+      speedIdx = (speedIdx + 1) % speeds.length;
+      video.playbackRate = speeds[speedIdx];
+      speedBtn.textContent = speeds[speedIdx] + 'x';
+      resetControlsTimer();
+    }
+
+    function togglePip() {
+      if (document.pictureInPictureElement) document.exitPictureInPicture();
+      else if (video && video.requestPictureInPicture) video.requestPictureInPicture();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) container.requestFullscreen();
+        else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+      resetControlsTimer();
+    }
+
+    function formatTime(s) {
+      if (isNaN(s) || s < 0) s = 0;
+      var mins = Math.floor(s / 60);
+      var secs = Math.floor(s % 60);
+      return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+
+    if (video) {
+      video.addEventListener('timeupdate', function() {
+        if (!video.duration) return;
+        var pct = (video.currentTime / video.duration) * 100;
+        progressFilled.style.width = pct + '%';
+        timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+      });
+      video.addEventListener('waiting', function() { spinner.style.display = 'block'; bigPlayBtn.style.display = 'none'; });
+      video.addEventListener('playing', function() { spinner.style.display = 'none'; bigPlayBtn.style.display = 'none'; playBtn.textContent = '⏸'; });
+      video.addEventListener('pause', function() { playBtn.textContent = '▶'; bigPlayBtn.textContent = '▶'; bigPlayBtn.style.display = 'flex'; });
+    }
+
+    function seekVideo(e) {
+      var rect = document.getElementById('progressWrap').getBoundingClientRect();
+      var pos = (e.clientX - rect.left) / rect.width;
+      if (video && video.duration) video.currentTime = pos * video.duration;
+      resetControlsTimer();
+    }
+
+    window.addEventListener('keydown', function(e) {
+      resetControlsTimer();
+      switch (e.key) {
+        case ' ':
+        case 'Enter':
+          togglePlay(); e.preventDefault(); break;
+        case 'ArrowLeft': skip(-10); e.preventDefault(); break;
+        case 'ArrowRight': skip(10); e.preventDefault(); break;
+        case 'ArrowUp': if (video) video.volume = Math.min(1, video.volume + 0.1); e.preventDefault(); break;
+        case 'ArrowDown': if (video) video.volume = Math.max(0, video.volume - 0.1); e.preventDefault(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'm': case 'M': toggleMute(); break;
+      }
+    });
+
+    var lastTap = 0;
+    container.addEventListener('touchend', function(e) {
+      var cur = new Date().getTime();
+      var diff = cur - lastTap;
+      if (diff < 300 && diff > 0) {
+        var x = e.changedTouches[0].clientX;
+        var w = window.innerWidth;
+        if (x < w * 0.4) skip(-10);
+        else if (x > w * 0.6) skip(10);
+      }
+      lastTap = cur;
+    });
+
+    function openShareModal() { document.getElementById('shareModal').style.display = 'flex'; }
+    function closeShareModal() { document.getElementById('shareModal').style.display = 'none'; }
+    function copyEmbedCode() {
+      var tb = document.getElementById('embedCodeText');
+      tb.select();
+      navigator.clipboard.writeText(tb.value).then(function() {
+        var btn = document.getElementById('btnCopyCode');
+        btn.textContent = '✅ Kopyalandı!';
+        setTimeout(function(){ btn.textContent = '📋 Kodu Kopyala'; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

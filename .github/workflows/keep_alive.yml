@@ -1,0 +1,35 @@
+name: 7/24 Keep Alive Heartbeat
+
+on:
+  schedule:
+    # Her 15 dakikada bir otomatik tetiklenir (Hugging Face'in 48 saatlik uyku sayacını sürekli sıfırlar)
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # GitHub Actions panelinden 'Run workflow' ile elle de başlatılabilir
+  push:
+    branches:
+      - main
+
+jobs:
+  ping-space:
+    name: Ping Hugging Face Space
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Keep-Alive Ping to Health Endpoint
+        run: |
+          echo "🚀 [$(date -u)] Hugging Face Space uyanık tutma pingi gönderiliyor..."
+          
+          # Doğrudan HF Space domaini ve Space arayüzü
+          TARGET_URL="https://eshansayhan-hotlink.hf.space/health"
+          FALLBACK_URL="https://huggingface.co/spaces/eshansayhan/hotlink"
+          
+          # 1. /health kontrolü (Hafif ve hızlı durum sorgusu)
+          HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 20 "$TARGET_URL" || echo "000")
+          echo "📡 $TARGET_URL -> HTTP $HTTP_STATUS"
+          
+          # 2. Eğer ilk istek başarısız olursa ana Space sayfasına ping
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "⚠️ /health yanıt vermedi, doğrudan Space arayüzü uyandırılıyor..."
+            curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$FALLBACK_URL" || true
+          fi
+          
+          echo "✅ [$(date -u)] Ping işlemi tamamlandı. Space uyanık kalmaya devam edecek."

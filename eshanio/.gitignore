@@ -1,0 +1,13 @@
+hf_video_platform/**/node_modules/
+hf_video_platform/**/.venv/
+hf_video_platform/**/venv/
+hf_video_platform/core_cpp/build/
+hf_video_platform/hf_accounts.json
+hf_video_platform/certificates/*.pfx
+hf_video_platform/**/*.exe
+hf_video_platform/**/*.dll
+hf_video_platform/**/*.zip
+hf_video_platform/**/scratch_*
+hf_video_platform/**/.env
+hf_video_platform/**/.env.*
+!hf_video_platform/**/.env.example

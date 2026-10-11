@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969415726504",
+    "project_id": "hfstream-24964",
+    "storage_bucket": "hfstream-24964.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969415726504:android:d5e6f732f4c619fd00399d",
+        "android_client_info": {
+          "package_name": "com.eshansayhan.hfstream"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDvYHApUp09tnoVuqyQEfyW_eZUbpSvtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

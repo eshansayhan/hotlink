@@ -1,0 +1,520 @@
+<!-- Same template copy for workspace -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>{{TITLE}} - HFStream Embed Oynatici</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      user-select: none; -webkit-user-select: none;
+      touch-action: none;
+    }
+    #playerContainer {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: #000;
+      overflow: hidden;
+    }
+    /* GPU hizlandirma hafifletildi, will-change kaldirildi (bellek sorunu yapiyordu) */
+    #embedVideo {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: block;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+    .top-bar {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 14px 16px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, transparent 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 20;
+      opacity: 0; transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    #playerContainer.controls-active .top-bar { opacity: 1; pointer-events: auto; }
+    .top-left { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { font-weight: 900; font-size: 15px; letter-spacing: -0.3px; color: #fff; text-decoration: none; }
+    .brand-logo span { color: #00e5b4; }
+    .badge-quality { background: rgba(0,229,180,0.18); color: #00e5b4; border: 1px solid rgba(0,229,180,0.4); padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+    .video-title { font-size: 13px; font-weight: 700; color: #eee; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%);
+      z-index: 20;
+      opacity: 0; transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    #playerContainer.controls-active .bottom-bar { opacity: 1; pointer-events: auto; }
+    .progress-wrap {
+      width: 100%; height: 28px;
+      display: flex; align-items: center;
+      cursor: pointer; position: relative;
+      margin-bottom: 6px;
+      touch-action: none;
+    }
+    .progress-track {
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px; position: relative;
+      transition: height 0.15s ease;
+    }
+    .progress-wrap:active .progress-track { height: 6px; }
+    .progress-buffer { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,255,255,0.35); border-radius: 2px; width: 0%; pointer-events: none; }
+    .progress-filled { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #00c8f0, #00e5b4); border-radius: 2px; width: 0%; box-shadow: 0 0 8px rgba(0,229,180,0.5); pointer-events: none; }
+    .progress-thumb { position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%) scale(0); width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid #00e5b4; box-shadow: 0 0 10px #00e5b4; pointer-events: none; transition: transform 0.15s ease; }
+    .progress-wrap:active .progress-thumb { transform: translate(-50%, -50%) scale(1); }
+    .controls-row { display: flex; align-items: center; justify-content: space-between; }
+    .controls-left, .controls-right { display: flex; align-items: center; gap: 6px; }
+    .ctrl-btn { background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; padding: 8px; border-radius: 8px; min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: background 0.2s; }
+    .ctrl-btn:active { background: rgba(255,255,255,0.15); }
+    .ctrl-btn.text-btn { font-size: 12px; font-weight: 700; min-width: 36px; }
+    .time-disp { font-size: 11px; font-weight: 600; color: #ccc; white-space: nowrap; }
+    .center-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 15; pointer-events: none; }
+    .big-play-btn { width: 72px; height: 72px; border-radius: 50%; background: rgba(0,229,180,0.9); color: #000; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; pointer-events: auto; box-shadow: 0 0 30px rgba(0,229,180,0.5); transition: transform 0.2s, opacity 0.2s; }
+    .big-play-btn:active { transform: scale(0.9); }
+    .spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.15); border-top-color: #00e5b4; border-radius: 50%; animation: spin 0.85s linear infinite; display: none; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .skip-flash { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.75); color: #fff; font-size: 13px; font-weight: 700; padding: 10px 18px; border-radius: 40px; display: flex; align-items: center; gap: 6px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 25; }
+    .skip-flash.left { left: 20px; }
+    .skip-flash.right { right: 20px; }
+    .skip-flash.show { opacity: 1; }
+    .watermark { position: absolute; top: 14px; right: 16px; z-index: 18; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; text-decoration: none; color: #ccc; font-size: 11px; font-weight: 700; transition: opacity 0.3s; }
+    .watermark span.dot { width: 6px; height: 6px; border-radius: 50%; background: #00e5b4; }
+    #playerContainer.controls-active .watermark { opacity: 0; pointer-events: none; }
+    /* Tam ekran duzeltmesi */
+    :fullscreen #playerContainer, :-webkit-full-screen #playerContainer, :-moz-full-screen #playerContainer { width: 100vw !important; height: 100vh !important; }
+    :fullscreen #embedVideo, :-webkit-full-screen #embedVideo { width: 100vw !important; height: 100vh !important; object-fit: contain; }
+    .disabled-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px; background: #07070e; }
+  </style>
+</head>
+<body>
+  {{DISABLED_BLOCK}}
+  <div id="playerContainer" class="controls-active" style="{{PLAYER_STYLE}}">
+
+    <a href="{{WATERMARK_URL}}" target="_blank" class="watermark" id="watermark">
+      <span class="dot"></span>
+      <span>{{WATERMARK_TEXT}}</span>
+    </a>
+
+    <div class="top-bar">
+      <div class="top-left">
+        <a href="/eshanio" class="brand-logo" target="_blank">HF<span>Stream</span></a>
+        <span class="badge-quality">1080p BluRay</span>
+        <div class="video-title">{{TITLE}}</div>
+      </div>
+    </div>
+
+    <video
+      id="embedVideo"
+      src="{{STREAM_URL}}"
+      poster="{{POSTER_URL}}"
+      playsinline
+      webkit-playsinline
+      x5-playsinline
+      x5-video-player-type="h5"
+      x5-video-player-fullscreen="true"
+      preload="metadata"
+      crossorigin="anonymous"
+    ></video>
+
+    <div class="skip-flash left" id="skipLeft">&#9194; 10s</div>
+    <div class="skip-flash right" id="skipRight">10s &#9193;</div>
+
+    <div class="center-overlay" id="centerOverlay">
+      <div class="big-play-btn" id="bigPlayBtn" onclick="togglePlay()">&#9654;</div>
+      <div class="spinner" id="spinner"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-track">
+          <div class="progress-buffer" id="progressBuffer"></div>
+          <div class="progress-filled" id="progressFilled"></div>
+          <div class="progress-thumb" id="progressThumb"></div>
+        </div>
+      </div>
+      <div class="controls-row">
+        <div class="controls-left">
+          <button class="ctrl-btn" id="playBtn" onclick="togglePlay()">&#9654;</button>
+          <button class="ctrl-btn text-btn" onclick="skip(-10)">-10</button>
+          <button class="ctrl-btn text-btn" onclick="skip(10)">+10</button>
+          <button class="ctrl-btn" id="muteBtn" onclick="toggleMute()">&#128266;</button>
+          <span class="time-disp" id="timeDisplay">0:00 / 0:00</span>
+        </div>
+        <div class="controls-right">
+          <button class="ctrl-btn text-btn" id="speedBtn" onclick="toggleSpeed()">1x</button>
+          <button class="ctrl-btn" id="fsBtn" onclick="toggleFullscreen()">&#9974;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    var video          = document.getElementById('embedVideo');
+    var container      = document.getElementById('playerContainer');
+    var playBtn        = document.getElementById('playBtn');
+    var bigPlayBtn     = document.getElementById('bigPlayBtn');
+    var spinner        = document.getElementById('spinner');
+    var progressFilled = document.getElementById('progressFilled');
+    var progressBuffer = document.getElementById('progressBuffer');
+    var progressThumb  = document.getElementById('progressThumb');
+    var timeDisplay    = document.getElementById('timeDisplay');
+    var muteBtn        = document.getElementById('muteBtn');
+    var speedBtn       = document.getElementById('speedBtn');
+    var fsBtn          = document.getElementById('fsBtn');
+    var skipLeft       = document.getElementById('skipLeft');
+    var skipRight      = document.getElementById('skipRight');
+    var progressWrap   = document.getElementById('progressWrap');
+
+    var ua        = navigator.userAgent || '';
+    var isAndroid = /Android/i.test(ua);
+    var isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    var isMobile  = isAndroid || isIOS;
+
+    /* ---- CONTROLS TIMER ---- */
+    var controlsTimer = null;
+    function showControls() {
+      container.classList.add('controls-active');
+      clearTimeout(controlsTimer);
+      if (!video.paused) {
+        controlsTimer = setTimeout(function() {
+          if (!video.paused) container.classList.remove('controls-active');
+        }, isMobile ? 3000 : 3500);
+      }
+    }
+
+    /* ---- AUTOPLAY (muted ile basla, sonra unmute) ---- */
+    video.muted = true;
+    video.volume = 1.0;
+
+    function tryAutoplay() {
+      var p = video.play();
+      if (p && p.then) {
+        p.then(function() {
+          updatePlayState(true);
+          setTimeout(function() {
+            video.muted = false;
+            updateMuteBtn();
+          }, 400);
+          showControls();
+        }).catch(function() {
+          video.muted = false;
+          showBigPlay();
+        });
+      }
+    }
+
+    if (video.readyState >= 4) {
+      tryAutoplay();
+    } else {
+      var didStart = false;
+      function startOnce() {
+        if (didStart) return;
+        didStart = true;
+        tryAutoplay();
+      }
+      video.addEventListener('canplaythrough', startOnce, { once: true });
+      video.addEventListener('canplay', startOnce, { once: true });
+    }
+
+    /* ---- PLAY STATE ---- */
+    function updatePlayState(playing) {
+      if (playing) {
+        playBtn.innerHTML = '&#9646;&#9646;';
+        bigPlayBtn.style.display = 'none';
+        spinner.style.display = 'none';
+      } else {
+        playBtn.innerHTML = '&#9654;';
+        bigPlayBtn.innerHTML = '&#9654;';
+        bigPlayBtn.style.display = 'flex';
+      }
+    }
+    function showBigPlay() {
+      bigPlayBtn.style.display = 'flex';
+      spinner.style.display = 'none';
+      container.classList.add('controls-active');
+    }
+
+    window.togglePlay = function() {
+      if (!video) return;
+      if (video.paused || video.ended) {
+        video.muted = false;
+        updateMuteBtn();
+        var p = video.play();
+        if (p && p.then) {
+          p.then(function() {
+            updatePlayState(true);
+            showControls();
+          }).catch(function(e) { console.warn(e); });
+        }
+      } else {
+        video.pause();
+        updatePlayState(false);
+        container.classList.add('controls-active');
+      }
+    };
+
+    /* ---- SKIP ---- */
+    var skipTimers = {};
+    window.skip = function(sec) {
+      if (!video || !video.duration) return;
+      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + sec));
+      showControls();
+      var key = sec < 0 ? 'l' : 'r';
+      var el  = sec < 0 ? skipLeft : skipRight;
+      el.classList.add('show');
+      clearTimeout(skipTimers[key]);
+      skipTimers[key] = setTimeout(function() { el.classList.remove('show'); }, 700);
+    };
+
+    /* ---- MUTE ---- */
+    function updateMuteBtn() {
+      muteBtn.innerHTML = video.muted ? '&#128263;' : '&#128266;';
+    }
+    window.toggleMute = function() {
+      video.muted = !video.muted;
+      updateMuteBtn();
+      showControls();
+    };
+
+    /* ---- SPEED ---- */
+    var speeds = [1, 1.25, 1.5, 2, 0.75];
+    var speedIdx = 0;
+    window.toggleSpeed = function() {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      video.playbackRate = speeds[speedIdx];
+      speedBtn.textContent = speeds[speedIdx] + 'x';
+      showControls();
+    };
+
+    /* ---- FULLSCREEN (Android webkitEnterFullscreen fallback) ---- */
+    var isFS = false;
+
+    function enterFS() {
+      if (container.requestFullscreen) {
+        container.requestFullscreen().catch(tryVideoFS);
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else {
+        tryVideoFS();
+      }
+    }
+    function tryVideoFS() {
+      if (video.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+        isFS = true;
+        fsBtn.innerHTML = '&#10005;';
+      } else if (video.requestFullscreen) {
+        video.requestFullscreen();
+      }
+    }
+    function exitFS() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (video.webkitExitFullscreen) {
+        video.webkitExitFullscreen();
+        isFS = false;
+        fsBtn.innerHTML = '&#9974;';
+      }
+    }
+    window.toggleFullscreen = function() {
+      if (isFS) exitFS(); else enterFS();
+      showControls();
+    };
+
+    function onFSChange() {
+      var fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+      isFS = !!fsEl;
+      fsBtn.innerHTML = isFS ? '&#10005;' : '&#9974;';
+      showControls();
+    }
+    document.addEventListener('fullscreenchange', onFSChange);
+    document.addEventListener('webkitfullscreenchange', onFSChange);
+    document.addEventListener('mozfullscreenchange', onFSChange);
+    video.addEventListener('webkitendfullscreen', function() {
+      isFS = false;
+      fsBtn.innerHTML = '&#9974;';
+    });
+
+    /* ---- PROGRESS BAR (Touch + Mouse) ---- */
+    var isScrubbing = false;
+
+    function getPos(clientX) {
+      var rect = progressWrap.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    }
+    function applySeek(clientX) {
+      if (!video.duration) return;
+      var pos = getPos(clientX);
+      video.currentTime = pos * video.duration;
+      progressFilled.style.width = (pos * 100) + '%';
+      progressThumb.style.left   = (pos * 100) + '%';
+    }
+
+    progressWrap.addEventListener('touchstart', function(e) {
+      isScrubbing = true;
+      e.preventDefault();
+      applySeek(e.touches[0].clientX);
+      showControls();
+    }, { passive: false });
+    progressWrap.addEventListener('touchmove', function(e) {
+      if (!isScrubbing) return;
+      e.preventDefault();
+      applySeek(e.touches[0].clientX);
+    }, { passive: false });
+    progressWrap.addEventListener('touchend', function() { isScrubbing = false; });
+
+    progressWrap.addEventListener('mousedown', function(e) {
+      isScrubbing = true;
+      applySeek(e.clientX);
+      showControls();
+    });
+    document.addEventListener('mousemove', function(e) { if (isScrubbing) applySeek(e.clientX); });
+    document.addEventListener('mouseup',   function()  { isScrubbing = false; });
+
+    /* ---- VIDEO EVENTS ---- */
+    video.addEventListener('timeupdate', function() {
+      if (!video.duration || isScrubbing) return;
+      var pct = (video.currentTime / video.duration) * 100;
+      progressFilled.style.width = pct + '%';
+      progressThumb.style.left   = pct + '%';
+      timeDisplay.textContent = fmtTime(video.currentTime) + ' / ' + fmtTime(video.duration);
+    });
+
+    video.addEventListener('progress', function() {
+      if (!video.duration || !video.buffered.length) return;
+      try {
+        var end = video.buffered.end(video.buffered.length - 1);
+        progressBuffer.style.width = ((end / video.duration) * 100) + '%';
+      } catch(e) {}
+    });
+
+    video.addEventListener('waiting',  function() { spinner.style.display = 'block'; bigPlayBtn.style.display = 'none'; });
+    video.addEventListener('stalled',  function() { spinner.style.display = 'block'; });
+    video.addEventListener('playing',  function() { spinner.style.display = 'none'; bigPlayBtn.style.display = 'none'; playBtn.innerHTML = '&#9646;&#9646;'; showControls(); });
+    video.addEventListener('pause',    function() { updatePlayState(false); container.classList.add('controls-active'); });
+    video.addEventListener('ended',    function() { updatePlayState(false); container.classList.add('controls-active'); });
+    video.addEventListener('error',    function() { spinner.style.display = 'none'; showBigPlay(); });
+
+    /* ---- TOUCH GESTURES ---- */
+    var lastTap = 0, tapTimer = null;
+    var tStartX = 0, tStartY = 0, tStartT = 0;
+
+    container.addEventListener('touchstart', function(e) {
+      if (progressWrap.contains(e.target)) return;
+      tStartX = e.touches[0].clientX;
+      tStartY = e.touches[0].clientY;
+      tStartT = Date.now();
+      showControls();
+    }, { passive: true });
+
+    container.addEventListener('touchend', function(e) {
+      if (progressWrap.contains(e.target)) return;
+      var dx = Math.abs(e.changedTouches[0].clientX - tStartX);
+      var dy = Math.abs(e.changedTouches[0].clientY - tStartY);
+      var dt = Date.now() - tStartT;
+      if (dx > 15 || dy > 15 || dt > 400) return;
+
+      var now  = Date.now();
+      var diff = now - lastTap;
+
+      if (diff < 300 && diff > 0) {
+        clearTimeout(tapTimer);
+        var x = e.changedTouches[0].clientX;
+        var w = window.innerWidth;
+        if      (x < w * 0.38) skip(-10);
+        else if (x > w * 0.62) skip(10);
+        else                    toggleFullscreen();
+        lastTap = 0;
+      } else {
+        lastTap = now;
+        tapTimer = setTimeout(function() {
+          if (container.classList.contains('controls-active')) {
+            if (!video.paused) container.classList.remove('controls-active');
+          } else {
+            showControls();
+          }
+        }, 210);
+      }
+    }, { passive: true });
+
+    /* ---- MOUSE (masaustu) ---- */
+    container.addEventListener('mousemove', function() { if (!isMobile) showControls(); });
+    container.addEventListener('click', function(e) {
+      if (isMobile) return;
+      if (e.target === video || e.target === container) togglePlay();
+      showControls();
+    });
+
+    /* ---- KEYBOARD ---- */
+    window.addEventListener('keydown', function(e) {
+      showControls();
+      switch(e.key) {
+        case ' ': case 'Enter': togglePlay(); e.preventDefault(); break;
+        case 'ArrowLeft':  skip(-10); e.preventDefault(); break;
+        case 'ArrowRight': skip(10);  e.preventDefault(); break;
+        case 'ArrowUp':   video.volume = Math.min(1, video.volume + 0.1); e.preventDefault(); break;
+        case 'ArrowDown': video.volume = Math.max(0, video.volume - 0.1); e.preventDefault(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'm': case 'M': toggleMute(); break;
+      }
+    });
+
+    /* ---- ANDROID ORIENTATION -> FULLSCREEN ---- */
+    if (isAndroid) {
+      var checkOrientation = function() {
+        setTimeout(function() {
+          var angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+          if ((Math.abs(angle) === 90) && !isFS) enterFS();
+        }, 300);
+      };
+      if (screen.orientation) {
+        screen.orientation.addEventListener('change', checkOrientation);
+      } else {
+        window.addEventListener('orientationchange', checkOrientation);
+      }
+    }
+
+    /* ---- UTILS ---- */
+    function fmtTime(s) {
+      if (isNaN(s) || s < 0) s = 0;
+      var h   = Math.floor(s / 3600);
+      var m   = Math.floor((s % 3600) / 60);
+      var sec = Math.floor(s % 60);
+      return h > 0
+        ? h + ':' + pad(m) + ':' + pad(sec)
+        : pad(m) + ':' + pad(sec);
+    }
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    showControls();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# ========================================================
+# HFStream Robots.txt (Google Search Console & SEO Optimized)
+# ========================================================
+User-agent: *
+Allow: /
+Allow: /app-ads.txt
+Allow: /eshanio/
+Allow: /watch/
+Allow: /video/
+Allow: /embed/
+Allow: /api/videos
+Allow: /api/cover/
+Allow: /sitemap.xml
+Allow: /video-sitemap.xml
+Allow: /eshanio/sitemap.xml
+Allow: /eshanio/video-sitemap.xml
+Disallow: /api/status
+
+Sitemap: https://eshansayhan-hotlink.hf.space/sitemap.xml
+Sitemap: https://eshansayhan-hotlink.hf.space/video-sitemap.xml
+Sitemap: https://eshansayhan-hotlink.hf.space/eshanio/sitemap.xml
+Sitemap: https://eshansayhan-hotlink.hf.space/eshanio/video-sitemap.xml

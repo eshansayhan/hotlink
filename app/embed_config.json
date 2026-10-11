@@ -1,0 +1,77 @@
+{
+  "embed_enabled": true,
+  "api_enabled": true,
+  "allowed_domains": ["*"],
+  "watermark_enabled": true,
+  "watermark_text": "HFStream",
+  "watermark_url": "https://www.tiktok.com/@eshansayhan",
+  "player_theme": "cyber_dark",
+  "auto_play": false,
+  "allow_fullscreen": true,
+  "hardware_acceleration": true,
+
+  "_dost_md_policy": "dost.md §1–§15 erişim kontrol politikası — runtime güvenliği backend middleware tarafından uygulanır.",
+
+  "geo_restriction": {
+    "enabled": true,
+    "allowed_countries": ["TR"],
+    "deny_foreign_web": true,
+    "deny_foreign_mobile_web": true,
+    "foreign_mobile_app_mode": "content_hidden",
+    "comment": "§1 §3 §4: Yalnızca TR. Yurt dışı mobil uygulama login yapabilir ancak içerik gizlenir."
+  },
+
+  "device_restriction": {
+    "enabled": true,
+    "allowed_devices": ["mobile"],
+    "deny_desktop": true,
+    "deny_tablet": true,
+    "desktop_response_code": 404,
+    "comment": "§1 §2: Masaüstü/tablet 404. Sistemin varlığı hakkında bilgi verilmez."
+  },
+
+  "vpn_proxy_block": {
+    "enabled": true,
+    "block_datacenter_ips": true,
+    "block_tor": true,
+    "block_known_proxies": true,
+    "comment": "§10: VPN/Proxy/Datacenter/Tor IP'leri engellenir. %100 garanti edilmez."
+  },
+
+  "content_access": {
+    "require_backend_authorization": true,
+    "require_mobile_app": true,
+    "require_authenticated_session": true,
+    "foreign_content_response": "empty",
+    "comment": "§5 §6: İçerik API'si yalnızca mobil uygulama + giriş yapmış kullanıcıya döner. İkisi birden sağlanmazsa boş yanıt."
+  },
+
+  "playback": {
+    "require_country_verification": true,
+    "require_device_verification": true,
+    "require_authentication": true,
+    "token_based": true,
+    "comment": "§7: Video oynatma backend'de country + device + auth ile korunur. Frontend-only değil."
+  },
+
+  "cache_policy": {
+    "api_responses": "no-store, private",
+    "vary_by": ["country", "device_type", "authentication_state"],
+    "comment": "§11: GeoIP/cihaz/auth'a göre değişen response'lar CDN cache'e alınmaz."
+  },
+
+  "protected_endpoints": [
+    "/api/movies",
+    "/api/series",
+    "/api/search",
+    "/api/movie/*",
+    "/api/series/*",
+    "/api/episodes/*",
+    "/api/play/*",
+    "/api/stream/*",
+    "/api/video/*",
+    "/api/m3u/*"
+  ],
+
+  "updated_at": "2026-10-07T22:41:00Z"
+}

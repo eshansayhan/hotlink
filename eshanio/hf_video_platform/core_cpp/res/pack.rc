@@ -1,0 +1,37 @@
+#include <windows.h>
+#include "../src/version.h"
+
+IDI_PACK_ICON ICON "pack.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    HF_VERSION_MAJOR, HF_VERSION_MINOR, HF_VERSION_PATCH, HF_VERSION_BUILD
+PRODUCTVERSION HF_VERSION_MAJOR, HF_VERSION_MINOR, HF_VERSION_PATCH, HF_VERSION_BUILD
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+FILEFLAGS      VS_FF_DEBUG
+#else
+FILEFLAGS      0x0L
+#endif
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      HF_COMPANY_NAME
+            VALUE "FileDescription",  "HFVideoPlatform Pack & Dataset Manager"
+            VALUE "FileVersion",      HF_VERSION_STRING
+            VALUE "InternalName",     "PackManager"
+            VALUE "LegalCopyright",   HF_LEGAL_COPYRIGHT
+            VALUE "OriginalFilename", "PackManager.exe"
+            VALUE "ProductName",      "HFVideoPlatform PackManager"
+            VALUE "ProductVersion",   HF_VERSION_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

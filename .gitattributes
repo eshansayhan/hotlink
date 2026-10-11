@@ -1,0 +1,7 @@
+videos/veeee.mp4 filter=lfs diff=lfs merge=lfs -text
+videos/video.mp4 filter=lfs diff=lfs merge=lfs -text
+eshanio/hf_video_platform/core_cpp/webview2_sdk/WebView2.tlb filter=lfs diff=lfs merge=lfs -text
+eshanio/hf_video_platform/home_273x410.png filter=lfs diff=lfs merge=lfs -text
+eshanio/hf_video_platform/home_cleaned.png filter=lfs diff=lfs merge=lfs -text
+eshanio/hf_video_platform/novaplayer_watch.png filter=lfs diff=lfs merge=lfs -text
+eshanio/hf_video_platform/watch_playlist.png filter=lfs diff=lfs merge=lfs -text

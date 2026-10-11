@@ -1,0 +1,16 @@
+**
+!backend_node/
+!backend_node/package.json
+!backend_node/package-lock.json
+!backend_node/server.js
+!backend_node/m3uShares.js
+!ai_python/
+!ai_python/requirements.txt
+!ai_python/src/
+!ai_python/src/**
+!docker-entrypoint.sh
+!frontend/
+!frontend/**
+!master_index.json
+!robots.txt
+!sitemap.xml

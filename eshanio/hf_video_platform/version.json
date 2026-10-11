@@ -1,0 +1,14 @@
+{
+  "major": 1,
+  "minor": 0,
+  "patch": 0,
+  "build": 1,
+  "version": "1.0.0",
+  "appTitle": "HFVideoPlatform",
+  "company": "HFStream Network (Eshan Sayhan)",
+  "copyright": "Copyright © 2026 Eshan Sayhan. Tüm hakları saklıdır.",
+  "releaseDate": "2026-09-28",
+  "channel": "stable",
+  "downloadZip": "HFVideoPlatform_Setup.zip",
+  "installerExe": "HFVideoPlatform_Setup.exe"
+}

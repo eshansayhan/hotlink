@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.local
+*.key
+*.secret
+secrets/
+google-services.json
+eshanio/hf_video_platform/backend_node/data/
+
+# Stream logs & temporary files
+logs/
+*.log
+scratch/
+cache/
+assets/watermark.png
+app/assets/watermark.png
+eshanio/assets/
+eshanio/hf_video_platform/frontend/assets/watermark.png
+
+# Local video uploads (keep directory with .gitkeep)
+videos/*
+!videos/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+{
+  "embed_enabled": true,
+  "api_enabled": true,
+  "allowed_domains": ["*"],
+  "watermark_enabled": true,
+  "watermark_text": "HFStream",
+  "watermark_url": "https://www.tiktok.com/@eshansayhan",
+  "player_theme": "cyber_dark",
+  "auto_play": false,
+  "allow_fullscreen": true,
+  "hardware_acceleration": true,
+  "updated_at": "2026-10-05T00:25:00Z"
+}

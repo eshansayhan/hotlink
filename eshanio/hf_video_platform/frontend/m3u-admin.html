@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b13">
+  <title>M3U Yönetimi | HFStream</title>
+  <style>
+    :root{color-scheme:dark;--bg:#080b13;--panel:#111827;--panel2:#172033;--line:#263247;--text:#f4f7fc;--muted:#9aa8bd;--accent:#35dfb2;--danger:#ff6b78;--blue:#719bff}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at top,#14253a 0,var(--bg) 58%);color:var(--text);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    .top{height:68px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(22px,calc((100vw - 1160px)/2));background:#080b13dd;position:sticky;top:0;z-index:2;backdrop-filter:blur(12px)}
+    .brand{font-weight:850;font-size:20px;letter-spacing:-.5px}.brand span{color:var(--accent)}
+    .top-actions{display:flex;align-items:center;gap:18px}.top a:not(.brand){color:var(--muted);font-size:14px}
+    main{max-width:1160px;margin:42px auto;padding:0 22px 64px}
+    h1{font-size:clamp(28px,4vw,38px);line-height:1.15;margin:0 0 8px;letter-spacing:-1px}
+    h2{font-size:18px;margin:0}
+    .intro,.muted{color:var(--muted)}
+    .intro{margin:0 0 28px}
+    .card{background:linear-gradient(145deg,#121b2a,#0e1521);border:1px solid var(--line);border-radius:16px;padding:22px;margin:18px 0;box-shadow:0 16px 42px #0002}
+    .login{max-width:480px;margin:52px auto}
+    .field{display:flex;gap:10px;align-items:center;margin-top:18px}
+    input,select{height:44px;padding:0 13px;color:var(--text);background:#090f1a;border:1px solid var(--line);border-radius:9px;min-width:0}
+    input:focus,select:focus{outline:2px solid #35dfb255;border-color:var(--accent)}
+    input[type=password]{flex:1}
+    button{border:0;border-radius:9px;min-height:42px;padding:0 16px;font-weight:750;background:var(--accent);color:#07130f;cursor:pointer;transition:filter .15s,transform .15s}
+    button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    button:disabled{opacity:.55;cursor:wait;transform:none}
+    button.secondary{background:#27354b;color:var(--text)}
+    button.danger{background:#532630;color:#ffdce0}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .toolbar input[type=search]{flex:1;min-width:190px}
+    .toolbar select{min-width:120px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    .count{font-size:13px;color:var(--muted)}
+    .video-list{max-height:450px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:14px}
+    .video-row{display:grid;grid-template-columns:22px 48px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 13px;border-bottom:1px solid #26324788}
+    .video-row:last-child{border-bottom:0}
+    .video-row:hover{background:#ffffff08}
+    .video-row input{width:17px;height:17px;accent-color:var(--accent)}
+    .video-row img{width:48px;height:62px;object-fit:cover;border-radius:6px;background:var(--panel2)}
+    .video-title,.video-meta{display:block}
+    .video-title{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .video-meta{font-size:12px;color:var(--muted);margin-top:3px}
+    .tag{font-size:11px;color:#aab9d0;background:#202c40;border-radius:20px;padding:4px 8px;white-space:nowrap}
+    .result{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#0a211c;border:1px solid #24634f;border-radius:10px;padding:13px;margin-top:16px}
+    .result a{color:var(--accent);overflow-wrap:anywhere;flex:1;min-width:200px}
+    .access-code{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;padding-top:10px;border-top:1px solid #24634f;color:var(--muted);font-size:13px}
+    .access-code strong{font:800 20px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:1px;color:var(--accent);user-select:all}
+    .status{font-size:12px;color:var(--muted);min-height:20px;margin-top:10px}
+    .status.error{color:#ff929d}.status.success{color:var(--accent)}
+    .shares{display:grid;gap:10px}
+    .share{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;padding:14px;background:#0a101b;border:1px solid var(--line);border-radius:10px}
+    .share-id{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+    .share-info{font-size:12px;color:var(--muted);margin-top:4px}
+    .badge{font-size:11px;padding:4px 9px;border-radius:20px;background:#183d31;color:var(--accent);white-space:nowrap}
+    .badge.expired,.badge.revoked{background:#303747;color:#b4bfd0}
+    .hidden{display:none!important}
+    .empty{padding:24px;text-align:center;color:var(--muted)}
+    @media(max-width:640px){main{margin:27px auto;padding:0 14px 42px}.top{height:58px;padding:0 14px}.top-actions{gap:11px}.card{padding:16px}.field{align-items:stretch;flex-direction:column}.field button{width:100%}.video-row{grid-template-columns:20px 40px minmax(0,1fr)}.video-row img{width:40px;height:54px}.video-row .tag{display:none}.share{grid-template-columns:minmax(0,1fr) auto;gap:8px}.share .badge{grid-column:1}.share button{grid-column:2;grid-row:1 / span 2}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">HF<span>Stream</span></a>
+    <div class="top-actions">
+      <a href="/">← Video platformuna dön</a>
+      <button id="logoutButton" class="secondary hidden" type="button">Çıkış</button>
+    </div>
+  </header>
+  <main>
+    <h1>M3U bağlantı yönetimi</h1>
+    <p class="intro">İçerikleri seç, bağlantı süresini belirle ve paylaşım durumunu yönet. Listeler herkese açık katalogda görünmez; bağlantıyı alan herkes kullanabilir.</p>
+
+    <section id="loginPanel" class="card login">
+      <h2>Yönetici girişi</h2>
+      <p class="muted">Sunucuda tanımlı M3U yönetici anahtarını gir. Anahtar yalnızca giriş için gönderilir; tarayıcıda saklanmaz.</p>
+      <form id="loginForm" class="field">
+        <input id="apiKeyInput" type="password" autocomplete="current-password" placeholder="Yönetici API anahtarı" required>
+        <button id="loginButton" type="submit">Giriş yap</button>
+      </form>
+      <div id="loginStatus" class="status" role="status"></div>
+    </section>
+
+    <div id="adminPanel" class="hidden">
+      <section class="card">
+        <div class="section-head">
+          <h2>İçerik seç</h2>
+          <span id="selectionCount" class="count">0 içerik seçildi</span>
+        </div>
+        <div class="toolbar">
+          <input id="videoSearch" type="search" placeholder="Başlık veya kategori ara">
+          <button id="selectVisibleButton" class="secondary" type="button">Görünenleri seç</button>
+          <button id="clearSelectionButton" class="secondary" type="button">Seçimi temizle</button>
+        </div>
+        <div id="videoStatus" class="status" role="status"></div>
+        <div id="videoList" class="video-list" aria-label="Video kataloğu"></div>
+        <div class="toolbar" style="margin-top:16px">
+          <label for="expirySelect" class="muted">Bağlantı süresi</label>
+          <select id="expirySelect">
+            <option value="1">1 gün</option>
+            <option value="3">3 gün</option>
+            <option value="7">7 gün</option>
+            <option value="14">14 gün</option>
+            <option value="30">30 gün</option>
+          </select>
+          <button id="createShareButton" type="button">M3U bağlantısı oluştur</button>
+        </div>
+        <div id="createStatus" class="status" role="status"></div>
+        <div id="createdResult" class="result hidden">
+          <a id="createdUrl" href="#" target="_blank" rel="noopener"></a>
+          <button id="copyCreatedButton" class="secondary" type="button">Bağlantıyı kopyala</button>
+          <div class="access-code">
+            <span>Uygulama erişim kodu (yalnızca şimdi gösterilir):</span>
+            <strong id="createdAccessCode"></strong>
+            <button id="copyCodeButton" class="secondary" type="button">Kodu kopyala</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Paylaşılan bağlantılar</h2>
+          <button id="refreshSharesButton" class="secondary" type="button">Yenile</button>
+        </div>
+        <div id="sharesStatus" class="status" role="status"></div>
+        <div id="sharesList" class="shares"></div>
+      </section>
+    </div>
+  </main>
+  <script>
+    const selectedIds = new Set();
+    let videos = [];
+    const byId = (id) => document.getElementById(id);
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'same-origin',
+        headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers }
+      });
+      if (!response.ok) {
+        let message = `İstek başarısız oldu (${response.status}).`;
+        try {
+          const body = await response.json();
+          if (body.error) {
+            message = body.details ? `${body.error} ${body.details}` : body.error;
+          }
+        } catch {}
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
+      }
+      return response.status === 204 ? null : response.json();
+    }
+
+    function setStatus(element, message, kind = '') {
+      element.textContent = message;
+      element.className = `status ${kind}`;
+    }
+
+    function safeImageUrl(value) {
+      try {
+        const url = new URL(value, location.origin);
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+      } catch {
+        return '';
+      }
+    }
+
+    function getTitle(video) {
+      return String(video.title || video.name || 'İsimsiz içerik');
+    }
+
+    function filteredVideos() {
+      const query = byId('videoSearch').value.trim().toLocaleLowerCase('tr');
+      return videos.filter((video) => `${getTitle(video)} ${video.category || ''}`.toLocaleLowerCase('tr').includes(query));
+    }
+
+    function updateSelectionCount() {
+      byId('selectionCount').textContent = `${selectedIds.size} içerik seçildi`;
+    }
+
+    function renderVideos() {
+      const list = byId('videoList');
+      list.replaceChildren();
+      const visibleVideos = filteredVideos();
+      if (!visibleVideos.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = videos.length ? 'Aramayla eşleşen içerik yok.' : 'Katalogda içerik bulunamadı.';
+        list.append(empty);
+        return;
+      }
+
+      for (const video of visibleVideos) {
+        const id = String(video.id);
+        const row = document.createElement('label');
+        row.className = 'video-row';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = selectedIds.has(id);
+        checkbox.setAttribute('aria-label', `${getTitle(video)} seç`);
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          updateSelectionCount();
+        });
+        const image = document.createElement('img');
+        image.alt = '';
+        image.loading = 'lazy';
+        const coverUrl = safeImageUrl(video.cover_url || video.cover);
+        image.src = coverUrl && !new URL(coverUrl).pathname.startsWith('/api/cover/')
+          ? coverUrl
+          : '/app_icon.png';
+        image.onerror = () => {
+          image.onerror = null;
+          image.src = '/app_icon.png';
+        };
+        const details = document.createElement('span');
+        const title = document.createElement('span');
+        title.className = 'video-title';
+        title.textContent = getTitle(video);
+        const meta = document.createElement('span');
+        meta.className = 'video-meta';
+        meta.textContent = [video.year, video.category].filter(Boolean).join(' · ') || 'Video';
+        details.append(title, meta);
+        const type = document.createElement('span');
+        type.className = 'tag';
+        type.textContent = video.is_series || video.content_type === 'dizi' || video.type === 'Dizi' ? 'Dizi' : 'Film';
+        row.append(checkbox, image, details, type);
+        list.append(row);
+      }
+    }
+
+    async function loadVideos() {
+      setStatus(byId('videoStatus'), 'Video kataloğu yükleniyor…');
+      try {
+        const result = await api('/api/m3u-catalog');
+        if (!Array.isArray(result)) throw new Error('Video kataloğunun biçimi beklenenden farklı.');
+        videos = result.filter((video) => video && video.id !== undefined && video.id !== null);
+        renderVideos();
+        setStatus(byId('videoStatus'), `${videos.length} içerik yüklendi.`, 'success');
+      } catch (error) {
+        setStatus(byId('videoStatus'), error.message, 'error');
+      }
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? 'Bilinmeyen tarih' : date.toLocaleString('tr-TR');
+    }
+
+    function renderShares(shares) {
+      const list = byId('sharesList');
+      list.replaceChildren();
+      if (!shares.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Henüz paylaşım oluşturulmadı.';
+        list.append(empty);
+        return;
+      }
+
+      for (const share of shares) {
+        const row = document.createElement('article');
+        row.className = 'share';
+        const details = document.createElement('div');
+        const id = document.createElement('div');
+        id.className = 'share-id';
+        id.textContent = `${share.videoCount} içerik · ${share.id}`;
+        const info = document.createElement('div');
+        info.className = 'share-info';
+        info.textContent = `Oluşturuldu: ${formatDate(share.createdAt)} · Bitiş: ${formatDate(share.expiresAt)}`;
+        details.append(id, info);
+        const badge = document.createElement('span');
+        badge.className = `badge ${share.status}`;
+        badge.textContent = share.status === 'active' ? 'Aktif' : share.status === 'expired' ? 'Süresi doldu' : 'İptal edildi';
+        row.append(details, badge);
+        if (share.status === 'active') {
+          const revoke = document.createElement('button');
+          revoke.type = 'button';
+          revoke.className = 'danger';
+          revoke.textContent = 'İptal et';
+          revoke.addEventListener('click', () => revokeShare(share.id, revoke));
+          row.append(revoke);
+        }
+        list.append(row);
+      }
+    }
+
+    async function loadShares() {
+      setStatus(byId('sharesStatus'), 'Paylaşımlar yükleniyor…');
+      try {
+        const shares = await api('/api/playlist-shares');
+        renderShares(shares);
+        setStatus(byId('sharesStatus'), `${shares.length} paylaşım bulundu.`, 'success');
+      } catch (error) {
+        setStatus(byId('sharesStatus'), error.message, 'error');
+        if (error.status === 401) showLogin();
+      }
+    }
+
+    function showLogin() {
+      byId('loginPanel').classList.remove('hidden');
+      byId('adminPanel').classList.add('hidden');
+      byId('logoutButton').classList.add('hidden');
+      byId('apiKeyInput').value = '';
+    }
+
+    async function showAdmin() {
+      byId('loginPanel').classList.add('hidden');
+      byId('adminPanel').classList.remove('hidden');
+      byId('logoutButton').classList.remove('hidden');
+      await Promise.all([loadVideos(), loadShares()]);
+    }
+
+    byId('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = byId('loginButton');
+      button.disabled = true;
+      setStatus(byId('loginStatus'), 'Giriş yapılıyor…');
+      try {
+        await api('/api/m3u-admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ apiKey: byId('apiKeyInput').value })
+        });
+        byId('apiKeyInput').value = '';
+        await showAdmin();
+      } catch (error) {
+        setStatus(byId('loginStatus'), error.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    byId('logoutButton').addEventListener('click', async () => {
+      try {
+        await api('/api/m3u-admin/logout', { method: 'POST' });
+      } finally {
+        showLogin();
+      }
+    });
+
+    byId('videoSearch').addEventListener('input', renderVideos);
+    byId('selectVisibleButton').addEventListener('click', () => {
+      filteredVideos().forEach((video) => selectedIds.add(String(video.id)));
+      renderVideos();
+      updateSelectionCount();
+    });
+    byId('clearSelectionButton').addEventListener('click', () => {
+      selectedIds.clear();
+      renderVideos();
+      updateSelectionCount();
+    });
+    byId('refreshSharesButton').addEventListener('click', loadShares);
+    byId('copyCreatedButton').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(byId('createdUrl').href);
+        setStatus(byId('createStatus'), 'Bağlantı panoya kopyalandı.', 'success');
+      } catch {
+        setStatus(byId('createStatus'), 'Kopyalama başarısız. Bağlantıyı seçip elle kopyala.', 'error');
+      }
+    });
+    byId('copyCodeButton').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(byId('createdAccessCode').textContent);
+        setStatus(byId('createStatus'), 'Uygulama kodu panoya kopyalandı.', 'success');
+      } catch {
+        setStatus(byId('createStatus'), 'Kopyalama başarısız. Kodu seçip elle kopyala.', 'error');
+      }
+    });
+
+    byId('createShareButton').addEventListener('click', async () => {
+      if (!selectedIds.size) {
+        setStatus(byId('createStatus'), 'Önce en az bir içerik seç.', 'error');
+        return;
+      }
+      const button = byId('createShareButton');
+      button.disabled = true;
+      setStatus(byId('createStatus'), 'M3U bağlantısı oluşturuluyor…');
+      byId('createdResult').classList.add('hidden');
+      try {
+        const share = await api('/api/playlist-shares', {
+          method: 'POST',
+          body: JSON.stringify({
+            videoIds: [...selectedIds],
+            expiresInDays: Number(byId('expirySelect').value)
+          })
+        });
+        const link = new URL(share.url, location.origin);
+        byId('createdUrl').href = link.href;
+        byId('createdUrl').textContent = link.href;
+        byId('createdAccessCode').textContent = share.accessCode;
+        byId('createdResult').classList.remove('hidden');
+        setStatus(byId('createStatus'), `Bağlantı ve uygulama kodu oluşturuldu. ${formatDate(share.expiresAt)} tarihinde sona erer. Kodu kaydet; tekrar gösterilmez.`, 'success');
+        await loadShares();
+      } catch (error) {
+        setStatus(byId('createStatus'), error.message, 'error');
+        if (error.status === 401) showLogin();
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    async function revokeShare(id, button) {
+      if (!confirm('Bu M3U bağlantısını iptal etmek istiyor musun?')) return;
+      button.disabled = true;
+      try {
+        await api(`/api/playlist-shares/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        await loadShares();
+      } catch (error) {
+        setStatus(byId('sharesStatus'), error.message, 'error');
+        button.disabled = false;
+        if (error.status === 401) showLogin();
+      }
+    }
+
+    api('/api/m3u-admin/session')
+      .then((session) => session.authenticated ? showAdmin() : showLogin())
+      .catch((error) => setStatus(byId('loginStatus'), error.message, 'error'));
+  </script>
+</body>
+</html>

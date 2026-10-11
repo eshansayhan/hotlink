@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "HFVideoPlatform YouTube Injector",
+  "version": "1.0",
+  "description": "Injects HFVideoPlatform local videos into YouTube search results.",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8080/*",
+    "*://*.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google-site-verification" content="eVN5RoP1HoEZxLEvquFJes0suf6hWeV-6-gxVejveiM" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>24/7 Multi-Stream Control Panel (YouTube, Kick & TikTok)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=2026-10-02-1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2226%22 font-size=%2224%22>📡</text></svg>">
+</head>
+<body>
+  <!-- Ambient background glow layers -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-box">
+          <span class="logo-icon">📡</span>
+          <div class="logo-pulse"></div>
+        </div>
+        <div class="title-group">
+          <h1>24/7 MULTI-STREAM CONTROL</h1>
+          <span class="subtitle">YouTube, Kick & TikTok Live Broadcast & Automation Engine</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- WebSocket Real-time Status Badge -->
+        <div class="ws-badge ws-badge-connected" id="wsConnectionBadge" title="Real-time Full-Duplex WebSocket Connection">
+          <span class="ws-dot"></span>
+          <span class="ws-text" id="wsConnectionText">WebSocket Canlı</span>
+        </div>
+
+        <!-- Live Status Pill -->
+        <div class="status-badge" id="topStatusBadge" data-status="STOPPED">
+          <span class="status-indicator-dot"></span>
+          <span class="status-text" id="topStatusText">STOPPED</span>
+        </div>
+
+        <!-- Admin Auth Status Button -->
+        <button type="button" class="health-btn" id="btnAdminAuth" title="Admin Yetkilendirme Durumu" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); cursor: pointer;">
+          <span class="icon" id="iconAdminAuth">🔓</span>
+          <span id="txtAdminAuth">Admin</span>
+        </button>
+
+        <a href="/health" target="_blank" class="health-btn" title="Inspect /health endpoint">
+          <span class="icon">❤️</span>
+          <span>Health API</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="dashboard-container">
+      
+      <!-- HERO CONTROLS & TELEMETRY ROW -->
+      <section class="hero-section">
+        <!-- Main Master Status Card -->
+        <div class="glass-card master-card">
+          <div class="master-header">
+            <div class="live-radar" id="liveRadar">
+              <div class="radar-circle circle-1"></div>
+              <div class="radar-circle circle-2"></div>
+              <div class="radar-center" id="radarCenterIcon">🔴</div>
+            </div>
+            <div class="master-info">
+              <span class="sub-label">Current Broadcast State</span>
+              <h2 id="masterStatusTitle" class="status-title-stopped">OFFLINE / STOPPED</h2>
+              <div class="master-meta-tags">
+                <span class="meta-tag" id="metaSourceTag">
+                  <i class="tag-icon">🎬</i> Source: <strong id="lblActiveSource">video.mp4</strong>
+                </span>
+                <span class="meta-tag tag-yt" id="metaYtTag">
+                  <i class="tag-icon">📺</i> YouTube: <strong id="lblYtStatus">Checking...</strong>
+                </span>
+                <span class="meta-tag tag-kick" id="metaKickTag">
+                  <i class="tag-icon">🟢</i> Kick: <strong id="lblKickStatus">Checking...</strong>
+                </span>
+                <span class="meta-tag" id="metaNimoTag">
+                  <i class="tag-icon">📡</i> Nimo: <strong id="lblNimoStatus">Checking...</strong>
+                </span>
+                <span class="meta-tag tag-tiktok" id="metaTiktokTag">
+                  <i class="tag-icon">🎵</i> TikTok: <strong id="lblTiktokStatus">Checking...</strong>
+                </span>
+                <span class="meta-tag tag-multistream" id="metaMultiTag">
+                  <i class="tag-icon">🔀</i> Mode: <strong id="lblBroadcastMode">Multi-Stream</strong>
+                </span>
+                <span class="meta-tag" id="metaWatchdogTag">
+                  <i class="tag-icon">🔄</i> Watchdog: <strong id="lblWatchdogState">Active</strong>
+                </span>
+                <span class="meta-tag" id="metaModeTag" style="border-color: rgba(236, 72, 153, 0.4); background: rgba(236, 72, 153, 0.15);">
+                  <i class="tag-icon">📱</i> Ratio: <strong id="lblStreamMode" style="color: #f472b6;">Shorts Live (9:16)</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Master Action Buttons -->
+          <div class="master-actions">
+            <button class="btn btn-primary" id="btnStartStream">
+              <span class="btn-icon">▶</span>
+              <span class="btn-label">START STREAM</span>
+            </button>
+            <button class="btn btn-danger" id="btnStopStream">
+              <span class="btn-icon">⏹</span>
+              <span class="btn-label">STOP STREAM</span>
+            </button>
+            <button class="btn btn-warning" id="btnRestartStream">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-label">RESTART STREAM</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Telemetry Stats Cards -->
+        <div class="telemetry-grid">
+          <!-- Card: Stream Uptime -->
+          <div class="glass-card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">STREAM UPTIME</span>
+              <span class="stat-icon">⏱️</span>
+            </div>
+            <div class="stat-value" id="valStreamUptime">00:00:00</div>
+            <div class="stat-sub" id="valAppUptime">System Uptime: 0s</div>
+          </div>
+
+          <!-- Card: Streaming Speed & FPS -->
+          <div class="glass-card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">ENCODING FPS / BITRATE</span>
+              <span class="stat-icon">⚡</span>
+            </div>
+            <div class="stat-value" id="valFpsBitrate">0 fps</div>
+            <div class="stat-sub" id="valBitrateSpeed">Bitrate: 0 kb/s | Speed: 0x</div>
+            <div class="stat-sub" id="valStreamHealth" style="color: #34d399; font-weight: 500; margin-top: 2px;">🟢 100% Kararlı (Kayıp: 0 | Tekrar: 0)</div>
+          </div>
+
+          <!-- Card: Reconnect Watchdog -->
+          <div class="glass-card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">RECONNECTS / RECOVERY</span>
+              <span class="stat-icon">🛡️</span>
+            </div>
+            <div class="stat-value" id="valReconnectCount">0</div>
+            <div class="stat-sub" id="valRetryStatus">Auto-recovery: Ready</div>
+          </div>
+
+          <!-- Card: Hardware & PID -->
+          <div class="glass-card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">SERVER RESOURCES & PID</span>
+              <span class="stat-icon">💻</span>
+            </div>
+            <div class="stat-value" id="valCpuRam">CPU 0% | RAM 0%</div>
+            <div class="stat-sub" id="valFfmpegPid">FFmpeg PID: None</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAVIGATION TABS -->
+      <nav class="content-tabs">
+        <button class="tab-button active" data-tab="tab-settings">
+          <span class="tab-icon">⚙️</span>
+          <span>Platforms & Encoding (YouTube, Kick & TikTok)</span>
+        </button>
+        <button class="tab-button" data-tab="tab-studio">
+          <span class="tab-icon">✨</span>
+          <span>Live Studio, Hedef & TikTok Chat</span>
+        </button>
+        <button class="tab-button" data-tab="tab-videos">
+          <span class="tab-icon">🎞️</span>
+          <span>Video Sources & Playlist</span>
+        </button>
+        <button class="tab-button" data-tab="tab-logs">
+          <span class="tab-icon">📟</span>
+          <span>Live Console & Logs</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: CONFIGURATION & PLATFORMS -->
+      <section class="tab-pane active" id="tab-settings">
+        <!-- Platforms Row -->
+        <div class="platforms-grid">
+          <!-- YouTube RTMP Credentials Card -->
+          <div class="glass-card platform-card card-youtube">
+            <div class="card-title-row">
+              <h3><span class="title-icon">📺</span> YouTube Live Broadcast</h3>
+              <label class="switch-toggle" title="Enable/Disable YouTube Live">
+                <input type="checkbox" id="chkYoutubeEnabled" checked>
+                <span class="slider-round slider-yt"></span>
+              </label>
+            </div>
+            <p class="card-desc">YouTube Live & Shorts stream credentials. Supports RTMP and RTMPS backup.</p>
+
+            <div class="styled-form">
+              <div class="form-group">
+                <label for="inputRtmpUrl">YouTube RTMP URL</label>
+                <div class="input-wrapper">
+                  <input type="text" id="inputRtmpUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" required>
+                </div>
+                <small class="field-hint">Primary: <code>rtmp://a.rtmp.youtube.com/live2</code></small>
+              </div>
+
+              <div class="form-group">
+                <label for="inputStreamKey">YouTube Stream Key</label>
+                <div class="input-wrapper with-button">
+                  <input type="password" id="inputStreamKey" placeholder="Enter stream key (e.g. xxxx-xxxx-xxxx-xxxx)" autocomplete="off">
+                  <button type="button" class="btn-toggle-eye" id="btnToggleKeyVisibility" title="Toggle visibility">👁️</button>
+                </div>
+                <small class="field-hint">Masked for privacy.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kick.com RTMP Credentials Card -->
+          <div class="glass-card platform-card card-kick">
+            <div class="card-title-row">
+              <h3><span class="title-icon" style="color: #53fc18;">🟢</span> Kick.com Broadcast</h3>
+              <label class="switch-toggle" title="Enable/Disable Kick.com Live">
+                <input type="checkbox" id="chkKickEnabled" checked>
+                <span class="slider-round slider-kick"></span>
+              </label>
+            </div>
+            <p class="card-desc">Simultaneous Kick.com broadcast via Amazon IVS low-latency RTMPS ingestion.</p>
+
+            <div class="styled-form">
+              <div class="form-group">
+                <label for="inputKickRtmpUrl">Kick RTMP(S) URL</label>
+                <div class="input-wrapper">
+                  <input type="text" id="inputKickRtmpUrl" placeholder="rtmps://fa723fc1b171.global-contribute.live-video.net/app" required>
+                </div>
+                <small class="field-hint">Ingest URL (automatically ensures <code>/app</code> path is present).</small>
+              </div>
+
+              <div class="form-group">
+                <label for="inputKickStreamKey">Kick Stream Key</label>
+                <div class="input-wrapper with-button">
+                  <input type="password" id="inputKickStreamKey" placeholder="sk_us-west-2_..." autocomplete="off">
+                  <button type="button" class="btn-toggle-eye" id="btnToggleKickKeyVisibility" title="Toggle visibility">👁️</button>
+                </div>
+                <small class="field-hint">Your Kick Creator Dashboard stream key.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Twitch Live RTMP Credentials Card -->
+          <div class="glass-card platform-card card-twitch">
+            <div class="card-title-row">
+              <h3><span class="title-icon" style="color: #9146ff;">📡</span> Twitch Live Broadcast</h3>
+              <label class="switch-toggle" title="Enable/Disable Twitch Live">
+                <input type="checkbox" id="chkTwitchEnabled" checked>
+                <span class="slider-round slider-twitch"></span>
+              </label>
+            </div>
+            <p class="card-desc">Twitch Live broadcast via the standard RTMP ingest endpoint used by Twitch Studio / OBS.</p>
+
+            <div class="styled-form">
+              <div class="form-group">
+                <label for="inputTwitchRtmpUrl">Twitch RTMP URL</label>
+                <div class="input-wrapper">
+                  <input type="text" id="inputTwitchRtmpUrl" placeholder="rtmp://live.twitch.tv/app" required>
+                </div>
+                <small class="field-hint">Use Twitch ingest URL in the form <code>rtmp://live.twitch.tv/app</code>.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="inputTwitchStreamKey">Twitch Stream Key</label>
+                <div class="input-wrapper with-button">
+                  <input type="password" id="inputTwitchStreamKey" placeholder="Enter Twitch stream key..." autocomplete="off">
+                  <button type="button" class="btn-toggle-eye" id="btnToggleTwitchKeyVisibility" title="Toggle visibility">👁️</button>
+                </div>
+                <small class="field-hint">Your Twitch stream key from the Creator Dashboard / stream settings.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nimo TV RTMP Credentials Card -->
+          <div class="glass-card platform-card card-nimo">
+            <div class="card-title-row">
+              <h3><span class="title-icon" style="color: #ff8a00;">📡</span> Nimo TV Broadcast</h3>
+              <label class="switch-toggle" title="Enable/Disable Nimo TV Live">
+                <input type="checkbox" id="chkNimoEnabled">
+                <span class="slider-round slider-twitch"></span>
+              </label>
+            </div>
+            <p class="card-desc">Nimo TV yayınını, hesabınızın Live ayarlarından aldığınız RTMP adresi ve imzalı yayın anahtarıyla gönderir.</p>
+
+            <div class="styled-form">
+              <div class="form-group">
+                <label for="inputNimoRtmpUrl">Nimo RTMP Server URL</label>
+                <div class="input-wrapper">
+                  <input type="text" id="inputNimoRtmpUrl" placeholder="rtmp://alpush.rtmp.nimo.tv/live/" required>
+                </div>
+                <small class="field-hint">Nimo Live ayarlarında görünen RTMP sunucu adresi.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="inputNimoStreamKey">Nimo Stream Key</label>
+                <div class="input-wrapper with-button">
+                  <input type="password" id="inputNimoStreamKey" placeholder="Nimo yayın anahtarını girin..." autocomplete="new-password">
+                  <button type="button" class="btn-toggle-eye" id="btnToggleNimoKeyVisibility" title="Anahtarı göster/gizle">👁️</button>
+                </div>
+                <small class="field-hint">İmzalı key gizli tutulur; yayın anahtarınızı paylaşmayın. Süresi dolarsa Nimo’dan yenisini alın.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- TikTok Live RTMP Credentials Card -->
+          <div class="glass-card platform-card card-tiktok">
+            <div class="card-title-row">
+              <h3><span class="title-icon" style="color: #25f4ee;">🎵</span> TikTok Live Broadcast</h3>
+              <label class="switch-toggle" title="Enable/Disable TikTok Live">
+                <input type="checkbox" id="chkTiktokEnabled" checked>
+                <span class="slider-round slider-tiktok"></span>
+              </label>
+            </div>
+            <p class="card-desc">TikTok Live broadcast via RTMP ingestion (9:16 vertical ratio supported natively).</p>
+
+            <!-- TikTok Stream Key Generator Section -->
+            <div class="tiktok-generator-box">
+              <div class="generator-badge-row">
+                <span class="gen-badge">⚡ Otomatik Anahtar Üretici</span>
+                <span id="badgeActiveRoom" class="room-badge" style="display: none;">Oda Aktif: <strong id="lblActiveRoomId"></strong></span>
+              </div>
+              <p class="gen-desc">Güvenliğiniz için geçerli TikTok oturum çerezini yalnızca bu panele bir kez girin. Oda açılmadan önce oturum TikTok hesap API'siyle doğrulanır. Oda ve yayın anahtarı otomatik oluşturulur; TikTok geçici olarak 10037 döndürürse diğer platformlar yayına devam eder ve TikTok arka planda otomatik yeniden denenir.</p>
+
+              <div class="styled-form" style="margin-top: 10px;">
+                <div class="form-group">
+                  <label for="inputTiktokSessionId">TikTok Oturum Çerezi (sessionid)</label>
+                  <div class="input-wrapper with-button">
+                    <input type="password" id="inputTiktokSessionId" placeholder="Örn: 7b5e9f8a... veya sessionid=..." autocomplete="off">
+                    <button type="button" class="btn-toggle-eye" id="btnToggleTiktokSessionVisibility" title="Toggle visibility">👁️</button>
+                  </div>
+                  <div class="cookie-help-row">
+                    <button type="button" class="btn-text-link" id="btnToggleCookieGuide">❓ sessionid nasıl alınır?</button>
+                  </div>
+                  <div id="cookieGuideBox" class="cookie-guide-content" style="display: none;">
+                    <ol>
+                      <li>Bilgisayarınızda <strong>tiktok.com</strong> adresine girip hesabınıza giriş yapın.</li>
+                      <li>Klavyeden <code>F12</code> tuşuna basın (Geliştirici Araçları açılır).</li>
+                      <li>Üst menüden <strong>Application</strong> (Uygulama) sekmesine tıklayın.</li>
+                      <li>Sol menüde <strong>Cookies</strong> &rarr; <strong>https://www.tiktok.com</strong> seçin.</li>
+                      <li>Listeden <strong>sessionid</strong> isimli satırı bulup <strong>Value</strong> (Değer) kısmını kopyalayın ve buraya yapıştırın.</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="inputTiktokEvent">TikTok LIVE Etkinlik Linki veya ID (isteğe bağlı)</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="inputTiktokEvent" placeholder="https://www.tiktok.com/live/event/...">
+                  </div>
+                  <small class="field-hint">Otomatik oluşturulan yayın odası bu LIVE etkinliğine bağlanmayı dener.</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="inputTiktokTitle">Yayın Başlığı</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="inputTiktokTitle" placeholder="24/7 Canlı Yayın" value="24/7 Canlı Yayın">
+                  </div>
+                </div>
+
+                <div class="gen-buttons-row">
+                  <button type="button" class="btn btn-tiktok-gen" id="btnGenerateTiktokKey">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-label" id="lblBtnGenKey">Otomatik Anahtar Üret & Uygula</span>
+                  </button>
+                  <button type="button" class="btn btn-tiktok-stream" id="btnGenerateAndStartTiktok">
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-label" id="lblBtnGenAndStart">Anahtar Al & Yayını Başlat</span>
+                  </button>
+                  <button type="button" class="btn btn-danger btn-sm" id="btnFinishTiktokRoom" style="display: inline-flex;" title="TikTok'taki önceki açık canlı yayın odasını kapat ve sıfırla">
+                    ⏹ Odayı Kapat / Sıfırla
+                  </button>
+                </div>
+                <div id="genStatusMessage" class="gen-status-box" style="display: none;"></div>
+              </div>
+            </div>
+
+            <div class="styled-form" style="margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
+              <span class="sub-label" style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.8rem;">RTMP SUNUCU VE ANAHTAR BİLGİLERİ (Manuel veya Otomatik Dolar)</span>
+              <div class="form-group">
+                <label for="inputTiktokRtmpUrl">TikTok RTMP Server URL</label>
+                <div class="input-wrapper">
+                  <input type="text" id="inputTiktokRtmpUrl" placeholder="rtmp://live-push.tiktok.com/live/" required>
+                </div>
+                <small class="field-hint">Server URL from TikTok LIVE Studio or TikTok LIVE Center.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="inputTiktokStreamKey">TikTok Stream Key</label>
+                <div class="input-wrapper with-button">
+                  <input type="password" id="inputTiktokStreamKey" placeholder="Enter TikTok stream key..." autocomplete="off">
+                  <button type="button" class="btn-toggle-eye" id="btnToggleTiktokKeyVisibility" title="Toggle visibility">👁️</button>
+                </div>
+                <small class="field-hint">Your TikTok Live Stream Key (masked for privacy).</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Save Platform & Source Form -->
+        <div class="glass-card" style="margin-top: 20px;">
+          <form id="formCredentials" class="styled-form">
+            <div class="form-group">
+              <label for="inputVideoSource">Primary Video Source</label>
+              <div class="input-wrapper">
+                <input type="text" id="inputVideoSource" placeholder="asd.video or https://example.com/stream.mp4" required>
+              </div>
+              <small class="field-hint">Local file in <code>videos/</code> or HTTP/HTTPS stream URL.</small>
+            </div>
+
+            <div class="form-actions" style="margin-top: 12px; display: flex; gap: 12px;">
+              <button type="submit" class="btn btn-save" id="btnSaveCredentials" style="flex: 1;">
+                <span class="btn-icon">💾</span> Save Broadcast Platforms & Video Source
+              </button>
+            </div>
+          </form>
+        </div>
+
+          <!-- FFmpeg & Stream Settings Card -->
+          <div class="glass-card">
+            <div class="card-title-row">
+              <h3><span class="title-icon">🎛️</span> Stream Quality & Recovery Options</h3>
+              <span class="badge-tag">FFmpeg Settings</span>
+            </div>
+            <p class="card-desc">Optimize video resolution, bitrate, endless loop, and automated recovery timeouts.</p>
+
+            <form id="formStreamSettings" class="styled-form">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="selectResolution">Resolution & Format</label>
+                  <select id="selectResolution">
+                    <option value="1080x1920" selected>📱 1080x1920 (YouTube Shorts / Mobil Dikey - Önerilen)</option>
+                    <option value="720x1280">📱 720x1280 (Shorts Dikey HD)</option>
+                    <option value="1920x1080">🖥️ 1920x1080 (Yatay / Klasik Masaüstü)</option>
+                    <option value="1280x720">🖥️ 1280x720 (Yatay HD)</option>
+                    <option value="1440x2560">📱 1440x2560 (Shorts 2K Dikey)</option>
+                    <option value="2560x1440">🖥️ 2560x1440 (Yatay 2K)</option>
+                  </select>
+                  <small class="field-hint" style="color: #f472b6;">💡 1080x1920 dikey yayınlar YouTube uygulamasında <strong>Shorts Canlı Akışında</strong> gösterilir.</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="selectFps">Framerate (FPS)</label>
+                  <select id="selectFps">
+                    <option value="30">30 FPS (Standard Live)</option>
+                    <option value="60">60 FPS (Smooth)</option>
+                    <option value="24">24 FPS (Cinematic)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="inputBitrate">Video Bitrate</label>
+                  <input type="text" id="inputBitrate" placeholder="4500k">
+                  <small class="field-hint">Recommended for 1080p: 4000k - 6000k</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="selectPreset">CPU Preset</label>
+                  <select id="selectPreset">
+                    <option value="ultrafast">ultrafast (Lowest CPU)</option>
+                    <option value="superfast">superfast</option>
+                    <option value="veryfast" selected>veryfast (Recommended)</option>
+                    <option value="faster">faster</option>
+                    <option value="medium">medium (Higher Quality)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="selectHwAccel">🚀 Hardware Acceleration (Donanım Hızlandırma)</label>
+                <select id="selectHwAccel">
+                  <option value="auto" selected>⚡ Auto (En Uygun Donanımı Otomatik Seç)</option>
+                  <option value="nvenc">🟢 NVIDIA NVENC (h264_nvenc)</option>
+                  <option value="qsv">🔵 Intel QuickSync (h264_qsv)</option>
+                  <option value="videotoolbox">🍎 Apple VideoToolbox (macOS)</option>
+                  <option value="vaapi">🐧 Linux VAAPI (h264_vaapi)</option>
+                  <option value="cpu">💻 CPU Standart (libx264)</option>
+                </select>
+                <small class="field-hint">Auto modu mevcut GPU donanım hızlandırıcısını otomatik test eder, donanım yoksa kesintisiz CPU moduna geçer.</small>
+              </div>
+
+              <div class="toggle-list">
+                <label class="toggle-card">
+                  <input type="checkbox" id="chkLoop" checked>
+                  <div class="toggle-slider"></div>
+                  <div class="toggle-info">
+                    <strong>Endless Video Loop</strong>
+                    <span>Automatically restart from 00:00 when video finishes without dropping live stream.</span>
+                  </div>
+                </label>
+
+                <label class="toggle-card">
+                  <input type="checkbox" id="chkAutoReconnect" checked>
+                  <div class="toggle-slider"></div>
+                  <div class="toggle-info">
+                    <strong>Watchdog Auto-Recovery</strong>
+                    <span>Detects YouTube disconnects or FFmpeg drops and restarts stream (5s, 10s, 20s, 30s, 60s ladder).</span>
+                  </div>
+                </label>
+
+                <label class="toggle-card">
+                  <input type="checkbox" id="chkAutoStart">
+                  <div class="toggle-slider"></div>
+                  <div class="toggle-info">
+                    <strong>Auto-Start on Boot</strong>
+                    <span>Start stream automatically whenever server or Hugging Face Space restarts.</span>
+                  </div>
+                </label>
+                <div class="form-group" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+                  <label for="inputAdminPassword">🔒 Admin Panel Password (PIN / Şifre Koruma)</label>
+                  <div class="input-wrapper with-button">
+                    <input type="password" id="inputAdminPassword" placeholder="Panel şifresi belirle (Boş bırakılırsa korumasız olur)" autocomplete="off">
+                    <button type="button" class="btn-toggle-eye" id="btnToggleAdminPass" title="Şifreyi Göster/Gizle">👁️</button>
+                  </div>
+                  <small class="field-hint">Şifre belirlendiğinde yayın başlatma, durdurma ve ayar değişiklikleri için şifre doğrulaması istenir.</small>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-save" id="btnSaveStreamSettings">
+                  <span class="btn-icon">💾</span> Apply Stream Settings
+                </button>
+              </div>
+            </form>
+          </div>
+      </section>
+
+      <!-- TAB: LIVE STUDIO & OVERLAY (Canlı Önizleme, Hedef & TikTok Chat) -->
+      <section class="tab-pane" id="tab-studio">
+        <div class="two-column-layout">
+          <!-- Left Column: Live Preview & Performance Monitor -->
+          <div class="glass-card">
+            <div class="card-title-row">
+              <h3><span class="title-icon">📺</span> Canlı Yayın Önizlemesi & Overlay Ekranı</h3>
+              <span class="badge-tag" id="badgeStudioLive" style="background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5;">🔴 Canlı Simülasyon</span>
+            </div>
+            <p class="card-desc">Yayın üzerindeki canlı sayaç, hedef barı, hediye animasyonları ve TikTok chat balonlarının anlık önizlemesi.</p>
+
+            <!-- Interactive Live Preview Viewport -->
+            <div class="studio-preview-viewport" id="studioPreviewViewport">
+              <div class="preview-screen" id="previewScreen">
+                <!-- Video or Background Simulation -->
+                <div class="preview-bg" id="previewBg">
+                  <div class="preview-bg-pattern"></div>
+                  <div class="preview-center-badge">
+                    <span class="preview-play-icon">🎬</span>
+                    <span id="lblPreviewSource">video.mp4</span>
+                  </div>
+                </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Performance & Dropped Frames Monitor -->
+            <div class="studio-telemetry-box" style="margin-top: 15px;">
+              <div class="stat-header">
+                <span class="stat-label">📊 CANLI ENCODING & SAĞLIK TELEMETRİSİ</span>
+                <span class="stat-icon">⚡</span>
+              </div>
+              <div class="studio-metrics-grid">
+                <div class="metric-item">
+                  <span class="metric-key">FPS:</span>
+                  <strong class="metric-val" id="metricStudioFps">0.0</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-key">Bitrate:</span>
+                  <strong class="metric-val" id="metricStudioBitrate">0 kb/s</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-key">Hız Faktörü:</span>
+                  <strong class="metric-val" id="metricStudioSpeed">0.0x</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-key">Düşen Kare (Drop):</span>
+                  <strong class="metric-val" id="metricStudioDrop" style="color: #34d399;">0</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-key">Tekrar (Dup):</span>
+                  <strong class="metric-val" id="metricStudioDup">0</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-key">İşlenen Kare:</span>
+                  <strong class="metric-val" id="metricStudioFrame">0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Controllers & Triggers -->
+          <div class="glass-card">
+            <!-- SECTION D: ANTI-FINGERPRINT / HASH EVASION -->
+            <div class="card-title-row">
+              <h3><span class="title-icon">🛡️</span> Algoritma & Hash Kaçırma Durumu</h3>
+              <label class="switch-toggle" title="Hash Evasion Anahtarı">
+                <input type="checkbox" id="chkHashEvasion" checked>
+                <span class="slider-round slider-tiktok"></span>
+              </label>
+            </div>
+            <p class="card-desc">Algoritmaların (pHash, dHash, DCT) videoyu tespit etmesini engelleyen aktif filtreler:</p>
+
+            <div class="hash-toggles-grid">
+              <label class="hash-toggle-item">
+                <input type="checkbox" id="chkNoise" checked>
+                <span>⚡ Zamansal Gürültü (Noise)</span>
+              </label>
+              <label class="hash-toggle-item">
+                <input type="checkbox" id="chkSpatialShift" checked>
+                <span>📐 1px Uzamsal Kaydırma</span>
+              </label>
+              <label class="hash-toggle-item">
+                <input type="checkbox" id="chkColorOsc" checked>
+                <span>🌈 Harmonik Renk Dalgası</span>
+              </label>
+              <label class="hash-toggle-item">
+                <input type="checkbox" id="chkUnsharp" checked>
+                <span>🔍 Frekans & Kenar Modülasyonu</span>
+              </label>
+              <label class="hash-toggle-item">
+                <input type="checkbox" id="chkAudioEvasion" checked>
+                <span>🔊 Akustik Ses Salınımı</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VIDEOS & PLAYLIST -->
+      <section class="tab-pane" id="tab-videos">
+        <div class="two-column-layout">
+          <!-- Local Video Explorer & Uploader -->
+          <div class="glass-card">
+            <div class="card-title-row">
+              <h3><span class="title-icon">📁</span> Local Video Library</h3>
+              <button class="btn btn-sm btn-outline" id="btnGenerateSampleVideo" title="Generate asd.video test pattern with color bars & audio tone">
+                <span>🎨 Generate asd.video</span>
+              </button>
+            </div>
+            <p class="card-desc">Manage files stored in the <code>videos/</code> directory or upload new video files.</p>
+
+            <!-- Drag & Drop Uploader -->
+            <div class="upload-dropzone" id="uploadDropzone">
+              <input type="file" id="fileVideoUpload" accept="video/*,.video" style="display: none;">
+              <span class="dropzone-icon">📤</span>
+              <p>Drag & drop video here, or <strong class="browse-link">browse files</strong></p>
+              <span class="dropzone-sub">Supports .mp4, .mkv, .mov, .flv, .webm, .video</span>
+              <div class="progress-bar-container" id="uploadProgressBar" style="display: none;">
+                <div class="progress-fill" id="uploadProgressFill"></div>
+              </div>
+            </div>
+
+            <!-- Video File List -->
+            <div class="video-list-container" id="videoListContainer">
+              <div class="empty-state">Loading video files...</div>
+            </div>
+          </div>
+
+          <!-- Video Inspector & Playlist Management -->
+          <div class="glass-card">
+            <div class="card-title-row">
+              <h3><span class="title-icon">🔍</span> Video Inspector & Active Source</h3>
+              <span class="badge-tag" id="badgeSourceType">Local</span>
+            </div>
+
+            <div class="source-inspector-card" id="sourceInspector">
+              <div class="inspector-item">
+                <span class="inspector-key">Target Source:</span>
+                <span class="inspector-val code-font" id="inspTarget">asd.video</span>
+              </div>
+              <div class="inspector-item">
+                <span class="inspector-key">Validation Status:</span>
+                <span class="inspector-val" id="inspStatus">Checking...</span>
+              </div>
+              <div class="inspector-item">
+                <span class="inspector-key">Resolution:</span>
+                <span class="inspector-val" id="inspResolution">-</span>
+              </div>
+              <div class="inspector-item">
+                <span class="inspector-key">Duration:</span>
+                <span class="inspector-val" id="inspDuration">-</span>
+              </div>
+              <div class="inspector-item">
+                <span class="inspector-key">Codecs:</span>
+                <span class="inspector-val" id="inspCodecs">-</span>
+              </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="card-title-row">
+              <h4><span class="title-icon">📑</span> Multi-Video Playlist</h4>
+              <span class="badge-tag" id="playlistCounter">0 videos</span>
+            </div>
+            <p class="card-desc">Queue multiple videos to loop continuously in sequential order.</p>
+
+            <div class="playlist-add-row">
+              <input type="text" id="inputPlaylistSource" placeholder="Video URL or filename...">
+              <button class="btn btn-sm btn-primary" id="btnAddPlaylist">Add</button>
+            </div>
+
+            <div class="playlist-items-box" id="playlistItemsBox">
+              <div class="empty-state">No videos in playlist. Single source mode active.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: LIVE TERMINAL & LOGS -->
+      <section class="tab-pane" id="tab-logs">
+        <div class="glass-card console-card">
+          <div class="console-header">
+            <div class="window-buttons">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+              <span class="console-title">ffmpeg-live-streamer.log</span>
+            </div>
+
+            <div class="console-toolbar">
+              <div class="filter-box">
+                <input type="text" id="logSearchInput" placeholder="Filter logs...">
+              </div>
+              <select id="logLevelFilter" class="select-sm">
+                <option value="ALL">All Levels</option>
+                <option value="INFO">INFO</option>
+                <option value="WARN">WARN</option>
+                <option value="ERROR">ERROR</option>
+                <option value="FFMPEG">FFMPEG</option>
+              </select>
+              <label class="auto-scroll-label">
+                <input type="checkbox" id="chkAutoScroll" checked>
+                <span>Auto-scroll</span>
+              </label>
+              <button class="btn-icon-action" id="btnClearLogs" title="Clear Console">🧹 Clear</button>
+              <button class="btn-icon-action" id="btnCopyLogs" title="Copy to Clipboard">📋 Copy</button>
+            </div>
+          </div>
+
+          <!-- Console Terminal Body -->
+          <div class="console-body" id="consoleOutput">
+            <div class="log-line log-info">
+              <span class="log-time">[Init]</span>
+              <span class="log-badge badge-info">INFO</span>
+              <span class="log-msg">Connecting to live log stream...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span>Developer: <strong>Eshan Sayhan</strong> &bull; 24/7 Video &rarr; YouTube Live Streaming System</span>
+      </div>
+      <div class="footer-right">
+        <span>Hugging Face Spaces & Docker Ready &bull; Port: <strong id="lblPort">7860</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/app.js?v=2026-10-02-1"></script>
+</body>
+</html>
